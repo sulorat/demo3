@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="demo3.MainWindow"
+        x:CompileBindings="False"
+        Title="demo3">
+        <StackPanel Orientation="Vertical">
+    <Border>
+        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+            <TextBox Margin="10,0,10,0" Name="SearchTextBox" TextChanged="SearchProducts"></TextBox>
+            <ComboBox Margin="10,0,10,0" SelectionChanged="SelectedFilterCombobox" Name="FilterManufactureComboBox" MaxDropDownHeight="200"></ComboBox>
+            <ComboBox Margin="10,0,10,0" Name="SortByPriceCombobox" SelectionChanged="SelectedSortedComboBox"></ComboBox>
+        </StackPanel>
+    </Border>
+    <ScrollViewer Height="450" VerticalScrollBarVisibility="Auto">
+        <ListBox Name="ProductsListBox" SelectionChanged="ProductsListBox_SelectionChanged" Margin="5">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{Binding ProductColor}" BorderBrush="Gray" BorderThickness="5" CornerRadius="5" Margin="5">
+                        <StackPanel Orientation="Vertical" Width="200" Height="150">
+                            <Image Source="{Binding MainPhoto}" Height="90" Width="100" />
+                            <StackPanel VerticalAlignment="Bottom">
+                                <TextBlock Text="{Binding ProductTitle}" HorizontalAlignment="Center" Margin="5"/>
+                                <TextBlock Text="{Binding ProductCost, StringFormat='Цена: {0} руб.'}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding IsActive}" HorizontalAlignment="Center"></TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </ScrollViewer>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Margin="0,10,0,0" Background="Chocolate" HorizontalAlignment="Center" Name="StaticticTextBlock"></TextBlock>
+                <Button Click="GoToAddWindow">Добавить</Button>
+                <Button Name="EditButton" Margin="20,0,0,0" Content="Редактировать" Click="EditProduct_Click" IsVisible="False"/>
+                <Button Name="DeleteButton" Content="Удалить" Click="DeleteProduct_Click" IsVisible="False"/>
+            </StackPanel>
+</StackPanel>
+</Window>
