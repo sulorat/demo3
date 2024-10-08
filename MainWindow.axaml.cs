@@ -19,6 +19,10 @@ public class ProductPresenter : Product
     {
         get 
         {
+            if (ChangePhoto != null)
+            {
+                return ChangePhoto;
+            }
             if (!string.IsNullOrEmpty(this.Mainimagepath))
             {
                 return ImageHelper.Load(new Uri($"avares://demo3/Assets/{this.Mainimagepath}"));
@@ -27,6 +31,7 @@ public class ProductPresenter : Product
         }
     }
 
+    public Bitmap? ChangePhoto { get; set; } = null;
     
     public string ProductTitle {get=>this.Title;}
     public float ProductCost {get=>this.Cost; }
@@ -36,6 +41,11 @@ public class ProductPresenter : Product
 }
 public partial class MainWindow : Window
 {
+    private List<ProductPresenter> _currentPageProducts { get; set; }
+    private int[] _itemsPerPage = new[] { 10, 50, 100,200};
+    private string ItemsPerPage;
+    private int pages;
+    private int currentPage = 1;
     private List<Window> Windows = new List<Window>();
     private string _searchWord;
     private string filtredItem;
@@ -74,7 +84,7 @@ public partial class MainWindow : Window
             .ToList();
         
         _displayProducts = new ObservableCollection<ProductPresenter>(_products);
-        
+        ProductsPerPageComboBox.ItemsSource = _itemsPerPage;
         FilterManufactureComboBox.ItemsSource = Manufacturer;
         SortByPriceCombobox.ItemsSource = sortByPrice;   
         ProductsListBox.ItemsSource = _displayProducts;
@@ -83,6 +93,7 @@ public partial class MainWindow : Window
     private void DisplayProducts()
     {
         var displayProductList = _products;
+        
         if (!string.IsNullOrEmpty(_searchWord))
         {
             displayProductList = displayProductList.Where(product => product.Title.ToLower().Contains(_searchWord)||
@@ -105,6 +116,13 @@ public partial class MainWindow : Window
                 displayProductList = displayProductList.OrderByDescending(product => product.ProductCost).ToList();
                 break;
         }
+        if (!string.IsNullOrEmpty(ItemsPerPage))
+        {
+            int IntItemsPerPage =  int.Parse(ItemsPerPage);
+            pages = displayProductList.Count / IntItemsPerPage;
+            displayProductList = displayProductList.Skip((currentPage-1)*IntItemsPerPage).Take(IntItemsPerPage).ToList();
+            
+        }
 
         if (_displayProducts.Count!=0 && _displayProducts !=null)
         {
@@ -112,6 +130,7 @@ public partial class MainWindow : Window
         }
         foreach(var product in displayProductList){_displayProducts.Add(product);}
         StaticticTextBlock.Text = string.Format("Показано {0} из {1}", _displayProducts.Count, _products.Count);
+        PagesTextBlock.Text = string.Format("Страница: {0}",currentPage );
     }
 
     private void SearchProducts(object? sender, TextChangedEventArgs e)
@@ -119,6 +138,7 @@ public partial class MainWindow : Window
         _searchWord = (sender as TextBox).Text.ToLower();
         DisplayProducts();
     }
+    
 
     private void SelectedFilterCombobox(object? sender, SelectionChangedEventArgs e)
     {
@@ -132,55 +152,59 @@ public partial class MainWindow : Window
         DisplayProducts();
     }
 
-    private void GoToAddWindow(object? sender, RoutedEventArgs e)
+    private async void GoToAddWindow(object? sender, RoutedEventArgs e)
     {
-        var addWindow = new AddOrEditWindow();
-        
-        Windows.Add(addWindow);
-        if (Windows.Count >= 2)
-        {
-            addWindow.Close();
-        }
-        else
-        {
-            addWindow.Closed += (s, args) =>
-            {
-                Windows.Remove(addWindow);
-                _products.Add(addWindow.Product);
-                _displayProducts.Add(addWindow.Product);
-                DisplayProducts();
-            };
-            addWindow.Show();
-        }
-        
-    }
-
-    private void EditProduct_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_selectedProduct != null)
-        {
-            var editWindow = new AddOrEditWindow(_selectedProduct, true);
-            Windows.Add(editWindow);
+            var addWindow = new AddOrEditWindow();
+            Windows.Add(addWindow);
             if (Windows.Count >= 2)
             {
-                editWindow.Close();
+                addWindow.Close();
             }
             else
             {
-                editWindow.Closed += (s, args) =>
+                var result = await addWindow.ShowDialog<ProductPresenter>(this);
+                if (result != null)
                 {
-                    Windows.Remove(editWindow);
-                    ProductsListBox.ItemsSource = _products;
-                };
-                editWindow.Show();
+                    _products.Add(result);
+                    DisplayProducts();
+                }
+
+                Windows.Remove(addWindow);
             }
-            
+
+    }
+
+    private async void EditProduct_Click(object? sender, RoutedEventArgs e)
+    {
+        var editWindow = new AddOrEditWindow(_selectedProduct, true);
+        Windows.Add(editWindow);
+        if (Windows.Count >= 2)
+        {
+            editWindow.Close();
+        }
+        else
+        {
+            var result = await editWindow.ShowDialog<ProductPresenter>(this);
+            if (result != null)
+            {
+                _selectedProduct.Title = result.Title;
+                _selectedProduct.Cost = result.Cost;
+                _selectedProduct.Description = result.Description;
+                _selectedProduct.Isactive = result.Isactive;
+                DisplayProducts();
+            }
+
+            Windows.Remove(editWindow);
         }
     }
 
     private void DeleteProduct_Click(object? sender, RoutedEventArgs e)
     {
-        throw new NotImplementedException();
+        if (_selectedProduct != null)
+        {
+            _products.Remove(_selectedProduct);
+            DisplayProducts();
+        }
     }
 
     private void ProductsListBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -188,6 +212,31 @@ public partial class MainWindow : Window
         _selectedProduct = (ProductPresenter?)ProductsListBox.SelectedItem;
         EditButton.IsVisible = true;
         DeleteButton.IsVisible = true;
+    }
+
+    private void SelectionProductsPerPage(object? sender, SelectionChangedEventArgs e)
+    {
+        ItemsPerPage = (sender as ComboBox).SelectedItem.ToString();
+        DisplayProducts();
+    }
+
+    private void PreviousPage(object? sender, RoutedEventArgs e)
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            DisplayProducts();
+        }
+        
+    }
+
+    private void NextPage(object? sender, RoutedEventArgs e)
+    {
+        if (currentPage < pages)
+        {
+            currentPage++;
+            DisplayProducts();
+        }
     }
 }
 

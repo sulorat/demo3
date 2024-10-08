@@ -42,6 +42,10 @@
                 <Button Click="GoToAddWindow">Добавить</Button>
                 <Button Name="EditButton" Margin="20,0,0,0" Content="Редактировать" Click="EditProduct_Click" IsVisible="False"/>
                 <Button Name="DeleteButton" Content="Удалить" Click="DeleteProduct_Click" IsVisible="False"/>
+                <ComboBox Margin="10"  Name="ProductsPerPageComboBox" SelectionChanged="SelectionProductsPerPage"/>
+                <TextBlock Margin="10" Name="PagesTextBlock" Background="DeepSkyBlue"/>
+                <Button Click="NextPage" Content="Следующая"/>
+                <Button Click="PreviousPage" Content="Предыдущая"/>
             </StackPanel>
 </StackPanel>
 </Window>
